@@ -2,17 +2,19 @@ package apiserver
 
 import (
 	"fmt"
-	"k8s.io/apiserver/pkg/util/version"
 	"strings"
 
+	"github.com/openshift/generic-admission-server/pkg/registry/admissionreview/generated"
 	admissionv1 "k8s.io/api/admission/v1"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apiserver/pkg/endpoints/openapi"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
+	"k8s.io/apiserver/pkg/util/version"
 	restclient "k8s.io/client-go/rest"
 
 	"github.com/openshift/generic-admission-server/pkg/registry/admissionreview"
@@ -126,6 +128,10 @@ type CompletedConfig struct {
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
 	c.GenericConfig.EffectiveVersion = version.DefaultBuildEffectiveVersion()
+	c.GenericConfig.SkipOpenAPIInstallation = true
+	// required for InstallAPIGroup
+	c.GenericConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(Scheme))
+
 	completedCfg := completedConfig{
 		c.GenericConfig.Complete(),
 		&c.ExtraConfig,
